@@ -22,7 +22,8 @@ declare module "react-apexcharts" {
       | "polarArea"
       | "rangeBar"
       | "rangeArea"
-      | "treemap";
+      | "treemap"
+      | "sankey";
     series?: ApexOptions["series"];
     width?: string | number;
     height?: string | number;

@@ -56,7 +56,11 @@ export default function Charts({
     prevOptions.current = options;
 
     const current = chartRef.current;
-    chart.current = new ApexCharts(current, getConfig());
+    if (type === "sankey") {
+      chart.current = new ApexSankey(current, getConfig()); // Use ApexSankey
+    } else {
+      chart.current = new ApexCharts(current, getConfig());
+    }
     chart.current.render();
 
     return () => {
@@ -75,19 +79,22 @@ export default function Charts({
       height !== chart.current.opts.chart.height ||
       width !== chart.current.opts.chart.width;
 
-    if (seriesChanged || optionsChanged) {
-      if (!seriesChanged) {
-        // series has not changed, but options or size have changed
-        chart.current.updateOptions(getConfig());
-      } else if (!optionsChanged) {
-        // options or size have not changed, just the series has changed
-        chart.current.updateSeries(series);
-      } else {
-        // both might be changed
-        chart.current.updateOptions(getConfig());
+      if (seriesChanged || optionsChanged) {
+        if (!seriesChanged) {
+          chart.current.updateOptions(getConfig());
+        } else if (!optionsChanged) {
+          chart.current.updateSeries(series);
+        } else {
+          if (type === "sankey") {
+            chart.current.destroy();  // Sankey needs a full re-render
+            chart.current = new ApexSankey(chartRef.current, getConfig());
+            chart.current.render();
+          } else {
+            chart.current.updateOptions(getConfig());
+          }
+        }
       }
-    }
-    prevOptions.current = options
+      prevOptions.current = options;
 
   }, [options, series, height, width]);
 
@@ -96,6 +103,11 @@ export default function Charts({
       chart: { type, height, width },
       series
     };
+    if (type === "sankey") {
+      newOptions.plotOptions = {
+        sankey: options?.plotOptions?.sankey || {}
+      };
+    }
 
     return extend(options, newOptions);
   };
